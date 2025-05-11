@@ -17,6 +17,7 @@ if (-Not (Test-Path `$JAR_PATH)) {
 }
 
 java -jar `$JAR_PATH `$args
+exit `$LASTEXITCODE
 "@
 
 if (-Not (Test-Path $BIN_DIR)) {
