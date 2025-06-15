@@ -4,3 +4,6 @@ Download https://github.com/AnatoliiYak/testCoreInstallation/archive/refs/heads/
 run install.ps1 for windows
 <br>
 run install.sh for Linux/Mac OS
+
+run 'testcorecli help' - to get manual of testcorecli
+run 'testcorecgui' - to run gui app
