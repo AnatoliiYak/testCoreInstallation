@@ -3,20 +3,29 @@ $JAR_PATH = Join-Path $SCRIPT_DIR "TestCoreCLI-1.0-SNAPSHOT-jar-with-dependencie
 $GUI_JAR_PATH = Join-Path $SCRIPT_DIR "TetCoreGui.jar"
 $INSTALL_DIR = $SCRIPT_DIR
 $BIN_DIR = "$env:USERPROFILE\bin"
+$JAVAFX_DIR = Join-Path $SCRIPT_DIR "javafx"
 
-if (-Not (Test-Path $JAR_PATH)) {
-    Write-Host "Error: CLI JAR file not found at $JAR_PATH"
-    exit 1
-}
+# Check and download JavaFX if not present
+if (-Not (Test-Path $JAVAFX_DIR)) {
+    Write-Host "JavaFX not found. Downloading..."
 
-if (-Not (Test-Path $GUI_JAR_PATH)) {
-    Write-Host "Error: GUI JAR file not found at $GUI_JAR_PATH"
-    exit 1
+    $javafxUrl = "https://download2.gluonhq.com/openjfx/21.0.2/openjfx-21.0.2_windows-x64_bin-sdk.zip"
+    $zipPath = Join-Path $SCRIPT_DIR "javafx.zip"
+
+    Invoke-WebRequest -Uri $javafxUrl -OutFile $zipPath
+    Expand-Archive -Path $zipPath -DestinationPath $SCRIPT_DIR -Force
+
+    $extractedFolder = Get-ChildItem -Path $SCRIPT_DIR -Directory | Where-Object { $_.Name -like "javafx-sdk*" }
+    Rename-Item -Path $extractedFolder.FullName -NewName "javafx"
+    Remove-Item $zipPath
+
+    Write-Host "JavaFX downloaded and extracted to $JAVAFX_DIR"
 }
 
 # CLI script
 $cliScriptContent = @"
 `$JAR_PATH = '$INSTALL_DIR\TestCoreCLI-1.0-SNAPSHOT-jar-with-dependencies.jar'
+`$JAVAFX_LIB = '$INSTALL_DIR\javafx\lib'
 
 if (-Not (Test-Path `$JAR_PATH)) {
     Write-Host "Error: JAR file not found at `$JAR_PATH"
@@ -27,16 +36,22 @@ java -jar `$JAR_PATH `$args
 exit `$LASTEXITCODE
 "@
 
-# GUI script
+# GUI script with JavaFX support
 $guiScriptContent = @"
 `$JAR_PATH = '$INSTALL_DIR\TetCoreGui.jar'
+`$JAVAFX_LIB = '$INSTALL_DIR\javafx\lib'
 
 if (-Not (Test-Path `$JAR_PATH)) {
     Write-Host "Error: JAR file not found at `$JAR_PATH"
     exit 1
 }
 
-java -jar `$JAR_PATH
+if (-Not (Test-Path `$JAVAFX_LIB)) {
+    Write-Host "Error: JavaFX not found at `$JAVAFX_LIB"
+    exit 1
+}
+
+java --module-path "`$JAVAFX_LIB" --add-modules javafx.controls,javafx.fxml -jar `$JAR_PATH
 exit `$LASTEXITCODE
 "@
 
@@ -57,3 +72,4 @@ if ($env:Path -notlike "*$BIN_DIR*") {
 
 Write-Host "TestCoreCLI installed successfully to $cliScriptPath"
 Write-Host "TestCoreGUI installed successfully to $guiScriptPath"
+
