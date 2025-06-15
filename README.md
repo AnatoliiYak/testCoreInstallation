@@ -6,4 +6,5 @@ run install.ps1 for windows
 run install.sh for Linux/Mac OS
 
 run 'testcorecli help' - to get manual of testcorecli
+<br>
 run 'testcorecgui' - to run gui app
